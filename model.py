@@ -11,8 +11,8 @@ with warnings.catch_warnings():
 
 
 def data(diet_file='Personalized_Diet_Recommendations', nutrients_file='nutrients_csvfile'):
-    diet_df = pd.read_csv(f"/content/{diet_file}.csv")
-    nutrients_df = pd.read_csv(f"/content/{nutrients_file}.csv")
+    diet_df = pd.read_csv(f"./{diet_file}.csv")
+    nutrients_df = pd.read_csv(f"./{nutrients_file}.csv")
 
     diet_df.columns = diet_df.columns.str.strip().str.lower().str.replace(" ", "_")
     nutrients_df.columns = nutrients_df.columns.str.strip().str.lower().str.replace(" ", "_")

@@ -51,7 +51,7 @@ def data(
     return diet_df, nutrients_df, label_encoders
 
 
-def predict_for_patient(patient_id, diet_df, model, features):
+def predict_for_patient(patient_id, diet_df, model, features, label_encoders):
     patient_data = diet_df[diet_df["patient_id"] == patient_id].iloc[0].to_dict()
     if not patient_data:
         return {"error": "Patient ID not found."}
@@ -64,7 +64,7 @@ def predict_for_patient(patient_id, diet_df, model, features):
             new_data[col] = new_data[col].apply(
                 lambda x: (
                     label_encoders[col].transform([x])[0]
-                    if x in label_encoders[col].classes_
+                    if x in list(label_encoders[col].classes_)
                     else label_encoders[col].transform([label_encoders[col].classes_[0]])[0]
                 )
             )
@@ -188,7 +188,7 @@ def get_recommendations(
 ):
     model = load_model(model_path)
 
-    diet_df, nutrients_df, _ = data(diet_file, nutrients_file)
+    diet_df, nutrients_df, label_encoders = data(diet_file, nutrients_file)
 
     cols_to_drop = [
         "patient_id",
@@ -204,8 +204,17 @@ def get_recommendations(
 
     features = [col for col in diet_df.columns if col not in cols_to_drop]
 
-    predictions = predict_for_patient(patient_id, diet_df, model, features)
+    predictions = predict_for_patient(patient_id, diet_df, model, features, label_encoders)
 
     meal_plans = generate_meal_plans(nutrients_df, predictions)
 
     return {"predictions": predictions, "meal_plans": meal_plans}
+
+
+if __name__ == "__main__":
+    patient_id = "P01234"
+    model_path = "./multi_output_regressor.pkl"
+    diet_file = "./Personalized_Diet_Recommendations.csv"
+    nutrients_file = "./nutrients_csvfile.csv"
+    recommendations = get_recommendations(patient_id, model_path, diet_file, nutrients_file)
+    print(recommendations)
