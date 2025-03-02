@@ -28,17 +28,26 @@ const Dashboard = () => {
         return;
       }
 
+      const getRandomAge = () => {
+        // Generate a random age between 18 and 80
+        return Math.floor(Math.random() * (80 - 18 + 1)) + 18;
+      };
+      
+      const getRandomGender = () => {
+        // Randomly select a gender from the list
+        const genders = ["Male", "Female", "Other"];
+        return genders[Math.floor(Math.random() * genders.length)];
+      };
+
       const details = {
-        name: "Harry Potter",
-        age: 24,
-        gender: "Male",
-        healthInfo: {
-          bp: 143,
-        },
+        age: getRandomAge(),
+        gender: getRandomGender()
       };
 
       if (details) {
         setPatientDetails(details);
+        console.log(patientId);
+        
         setError("");
       } else {
         setError("Patient not found");
@@ -90,27 +99,25 @@ const Dashboard = () => {
   };
 
   const handleFetchMealData = async () => {
+    
     try {
-      // Simulate fetching meal data based on the selected plan
-      const dummyMealData = {
-        1: {
-          breakfast: "Oatmeal with fruits",
-          lunch: "Grilled chicken salad",
-          dinner: "Quinoa with vegetables",
+      const response = await fetch('http://127.0.0.1:8000/get_recommendations/', {
+        method: 'POST', // Specify the request method as POST
+        headers: {
+          'Content-Type': 'application/json', // Set the content type to JSON
         },
-        2: {
-          breakfast: "Scrambled eggs with toast",
-          lunch: "Vegetable stir-fry",
-          dinner: "Salmon with steamed broccoli",
-        },
-        3: {
-          breakfast: "Smoothie with spinach and banana",
-          lunch: "Lentil soup with whole grain bread",
-          dinner: "Grilled tofu with quinoa",
-        },
-      };
+        body: JSON.stringify({ patient_id: patientId }), // Include the patient_id in the body
+      });
 
-      const data = dummyMealData[mealPlan];
+      if (!response.ok) {
+        throw new Error('Failed to fetch meal data');
+      }
+
+      const data = await response.json();
+      console.log(data);
+      
+      setMealData(data);
+
       if (data) {
         setMealData(data);
       } else {
@@ -147,23 +154,13 @@ const Dashboard = () => {
       {patientDetails && (
         <div className="patient-details">
           <h3>Patient Details</h3>
-          <p><strong>Name:</strong> {patientDetails.name}</p>
+          <p><strong>Patient Id:</strong> {patientId}</p>
           <p><strong>Age:</strong> {patientDetails.age}</p>
           <p><strong>Gender:</strong> {patientDetails.gender}</p>
-          <p><strong>Blood Pressure:</strong> {patientDetails.healthInfo.bp}</p>
         </div>
       )}
 
       <div className="meal-plan-container">
-        <select
-          value={mealPlan}
-          onChange={(e) => setMealPlan(Number(e.target.value))}
-          className="meal-plan-dropdown"
-        >
-          <option value={1}>1</option>
-          <option value={2}>2</option>
-          <option value={3}>3</option>
-        </select>
         <button onClick={handleFetchMealData} className="fetch-meal-button">
           Fetch Meal Plan
         </button>
@@ -172,9 +169,67 @@ const Dashboard = () => {
       {mealData && (
         <div className="meal-data">
           <h3>Meal Plan Details</h3>
-          <p><strong>Breakfast:</strong> {mealData.breakfast}</p>
-          <p><strong>Lunch:</strong> {mealData.lunch}</p>
-          <p><strong>Dinner:</strong> {mealData.dinner}</p>
+          <div className="meal-cards-container">
+            {/* Breakfast Card */}
+            {mealData.meal_plans.Breakfast && (
+              <div className="meal-card">
+                <h3>Breakfast</h3>
+                <ul>
+                  {mealData.meal_plans.Breakfast.foods.map((food, index) => (
+                    <li key={index}>
+                      <strong>{food.food}</strong> ({food.measure}) - {food.calories} kcal
+                    </li>
+                  ))}
+                </ul>
+                <div className="meal-totals">
+                  <p><strong>Total Calories:</strong> {mealData.meal_plans.Breakfast.totals.calories}</p>
+                  <p><strong>Protein:</strong> {mealData.meal_plans.Breakfast.totals.protein}g</p>
+                  <p><strong>Carbs:</strong> {mealData.meal_plans.Breakfast.totals.carbs}g</p>
+                  <p><strong>Fat:</strong> {mealData.meal_plans.Breakfast.totals.fat}g</p>
+                </div>
+              </div>
+            )}
+
+            {/* Lunch Card */}
+            {mealData.meal_plans.Lunch && (
+              <div className="meal-card">
+                <h3>Lunch</h3>
+                <ul>
+                  {mealData.meal_plans.Lunch.foods.map((food, index) => (
+                    <li key={index}>
+                      <strong>{food.food}</strong> ({food.measure}) - {food.calories} kcal
+                    </li>
+                  ))}
+                </ul>
+                <div className="meal-totals">
+                  <p><strong>Total Calories:</strong> {mealData.meal_plans.Lunch.totals.calories}</p>
+                  <p><strong>Protein:</strong> {mealData.meal_plans.Lunch.totals.protein}g</p>
+                  <p><strong>Carbs:</strong> {mealData.meal_plans.Lunch.totals.carbs}g</p>
+                  <p><strong>Fat:</strong> {mealData.meal_plans.Lunch.totals.fat}g</p>
+                </div>
+              </div>
+            )}
+
+            {/* Dinner Card */}
+            {mealData.meal_plans.Dinner && (
+              <div className="meal-card">
+                <h3>Dinner</h3>
+                <ul>
+                  {mealData.meal_plans.Dinner.foods.map((food, index) => (
+                    <li key={index}>
+                      <strong>{food.food}</strong> ({food.measure}) - {food.calories} kcal
+                    </li>
+                  ))}
+                </ul>
+                <div className="meal-totals">
+                  <p><strong>Total Calories:</strong> {mealData.meal_plans.Dinner.totals.calories}</p>
+                  <p><strong>Protein:</strong> {mealData.meal_plans.Dinner.totals.protein}g</p>
+                  <p><strong>Carbs:</strong> {mealData.meal_plans.Dinner.totals.carbs}g</p>
+                  <p><strong>Fat:</strong> {mealData.meal_plans.Dinner.totals.fat}g</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
